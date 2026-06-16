@@ -6,7 +6,7 @@ const sections = [
         Trained on the{" "}
         <a
           href="https://www.kaggle.com/competitions/aptos2019-blindness-detection"
-          className="font-semibold text-sky-700 hover:text-sky-900 hover:underline"
+          className="font-normal text-[color:var(--powder-ink)] underline-offset-4 hover:underline"
         >
           APTOS 2019 Blindness Detection
         </a>{" "}
@@ -16,34 +16,40 @@ const sections = [
     ),
   },
   {
-    title: "Model architecture",
+    title: "Model",
     body: (
       <>
         EfficientNet-B3 at 300px, ImageNet-pretrained and fine-tuned for 5-class
-        classification with Ben Graham fundus preprocessing, a softened
-        class-weighted loss, and EMA weights. Explanations come from Grad-CAM
-        over the final convolutional layer.
+        classification with Ben Graham preprocessing, softened class weights,
+        and EMA weights.
       </>
     ),
   },
   {
-    title: "Limitations",
+    title: "Explanation",
     body: (
       <>
-        Trained on a single public dataset, so performance may not transfer
-        across cameras, populations, or image quality. It does not detect other
-        ocular disease, and confidence scores are not calibrated probabilities
-        of disease.
+        Grad-CAM is generated over the final convolutional layer so each report
+        can show the image regions that shaped the selected class.
       </>
     ),
   },
   {
-    title: "Ethical disclaimer",
+    title: "Limits",
+    body: (
+      <>
+        Performance may not transfer across cameras, populations, or image
+        quality. Retra does not detect other ocular disease, and confidence
+        scores are not calibrated disease probabilities.
+      </>
+    ),
+  },
+  {
+    title: "Use",
     body: (
       <>
         Retra is a research and educational demo. It is not a medical device and
-        must not be used for diagnosis or treatment decisions. Always consult a
-        qualified clinician.
+        must not be used for diagnosis or treatment decisions.
       </>
     ),
   },
@@ -51,21 +57,23 @@ const sections = [
 
 export default function About() {
   return (
-    <main className="space-y-8">
-      <section className="animate-fade-up max-w-3xl">
-        <p className="text-sm font-bold text-sky-700">About Retra</p>
-        <h1 className="mt-2 text-3xl font-bold leading-tight text-slate-950 sm:text-4xl">
-          A research demo for explainable diabetic retinopathy screening.
+    <main className="space-y-10">
+      <section className="animate-gentle-in max-w-3xl">
+        <p className="text-sm font-normal text-[color:var(--powder-ink)]">
+          Model notes
+        </p>
+        <h1 className="mt-3 text-4xl font-light leading-tight text-[color:var(--ink)] sm:text-5xl">
+          A small research demo for explainable DR screening.
         </h1>
-        <p className="mt-4 text-lg leading-8 text-slate-600">
-          The interface keeps the prediction, confidence, and heatmap close
-          together so the output can be reviewed as one report.
+        <p className="mt-4 text-lg font-light leading-8 text-[color:var(--muted)]">
+          The interface keeps the prediction, confidence, and heatmap together
+          so each result can be reviewed as one report.
         </p>
       </section>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        {sections.map((section, i) => (
-          <Section key={section.title} title={section.title} delay={i}>
+      <div className="surface animate-gentle-in delay-100 overflow-hidden rounded-lg">
+        {sections.map((section) => (
+          <Section key={section.title} title={section.title}>
             {section.body}
           </Section>
         ))}
@@ -77,20 +85,18 @@ export default function About() {
 function Section({
   title,
   children,
-  delay,
 }: {
   title: string;
   children: React.ReactNode;
-  delay: number;
 }) {
-  const delayClass = delay % 2 === 0 ? "delay-100" : "delay-200";
-
   return (
-    <section
-      className={`animate-fade-up ${delayClass} rounded-lg border border-sky-100 bg-white p-6 shadow-sm shadow-sky-100 transition hover:-translate-y-1 hover:border-sky-200`}
-    >
-      <h2 className="text-sm font-bold text-sky-700">{title}</h2>
-      <p className="mt-3 leading-7 text-slate-600">{children}</p>
+    <section className="grid gap-3 border-b border-[color:var(--line)] px-5 py-5 last:border-b-0 md:grid-cols-[0.28fr_1fr] md:px-6">
+      <h2 className="text-sm font-normal text-[color:var(--powder-ink)]">
+        {title}
+      </h2>
+      <p className="max-w-3xl text-base font-light leading-7 text-[color:var(--muted)]">
+        {children}
+      </p>
     </section>
   );
 }

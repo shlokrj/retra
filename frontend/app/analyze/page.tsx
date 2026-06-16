@@ -58,48 +58,48 @@ export default function Analyze() {
 
   return (
     <main className="space-y-8">
-      <section className="animate-fade-up flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+      <section className="animate-gentle-in flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="text-sm font-bold text-sky-700">Analyze</p>
-          <h1 className="mt-2 text-3xl font-bold leading-tight text-slate-950 sm:text-4xl">
-            Upload a fundus image and review the model report.
+          <p className="text-sm font-normal text-[color:var(--powder-ink)]">
+            Try demo
+          </p>
+          <h1 className="mt-3 max-w-3xl text-4xl font-light leading-tight text-[color:var(--ink)] sm:text-5xl">
+            Upload an image. Read the report.
           </h1>
-          <p className="mt-3 max-w-2xl text-lg leading-8 text-slate-600">
-            Retra returns a severity class, confidence score, class
-            probabilities, and Grad-CAM overlay in one light report.
+          <p className="mt-4 max-w-2xl text-lg font-light leading-8 text-[color:var(--muted)]">
+            Retra returns a class, confidence score, probability breakdown, and
+            attention overlay.
           </p>
         </div>
-        <span className="inline-flex w-fit items-center gap-2 rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm font-semibold text-slate-600 shadow-sm shadow-sky-100">
-          <span className="size-2 rounded-full bg-sky-400 animate-soft-pulse" />
-          research demo
-        </span>
+        <StatusPill loading={loading} />
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="animate-fade-up delay-100 rounded-lg border border-sky-100 bg-white p-5 shadow-sm shadow-sky-100">
+      <section className="grid gap-5 lg:grid-cols-[minmax(17rem,0.72fr)_minmax(0,1fr)]">
+        <div className="surface animate-gentle-in delay-100 rounded-lg p-5">
           <div className="mb-4">
-            <h2 className="text-lg font-bold text-slate-950">Image input</h2>
-            <p className="mt-1 text-sm leading-6 text-slate-500">
-              Choose a retinal image to send to the local prediction API.
+            <h2 className="text-lg font-normal text-[color:var(--ink)]">
+              Image
+            </h2>
+            <p className="mt-1 text-sm font-light leading-6 text-[color:var(--muted)]">
+              JPG, PNG, or another browser-supported image under 10 MB.
             </p>
           </div>
 
-          <label className="group flex min-h-72 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg border border-dashed border-sky-200 bg-sky-50/70 p-4 text-center transition hover:border-sky-300 hover:bg-sky-100/70">
+          <label className="group grid min-h-72 cursor-pointer place-items-center overflow-hidden rounded-lg border border-dashed border-[color:var(--line)] bg-white/45 p-4 text-center transition hover:border-[color:var(--powder-blue)] hover:bg-white/75">
             {preview ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={preview}
                 alt="Selected retinal preview"
-                className="max-h-72 w-full rounded-lg object-contain"
+                className="max-h-72 w-full rounded-md object-contain"
               />
             ) : (
               <div className="max-w-xs">
-                <div className="mx-auto mb-4 grid size-12 place-items-center rounded-lg bg-white text-xl font-bold text-sky-500 shadow-sm shadow-sky-100">
-                  +
-                </div>
-                <p className="font-bold text-slate-800">Choose image</p>
-                <p className="mt-2 text-sm leading-6 text-slate-500">
-                  JPG, PNG, or another browser-supported image under 10 MB.
+                <p className="text-base font-normal text-[color:var(--ink)]">
+                  Choose image
+                </p>
+                <p className="mt-2 text-sm font-light leading-6 text-[color:var(--muted)]">
+                  The preview will stay here before analysis.
                 </p>
               </div>
             )}
@@ -117,25 +117,25 @@ export default function Analyze() {
               onClick={onAnalyze}
               disabled={!file || loading}
               aria-busy={loading}
-              className="rounded-lg bg-sky-500 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-sky-200 transition hover:-translate-y-0.5 hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:translate-y-0"
+              className="powder-button rounded-lg px-5 py-3 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:translate-y-0"
             >
-              {loading ? "Analyzing..." : "Analyze"}
+              {loading ? "Analyzing..." : "Analyze image"}
             </button>
             {file && (
-              <span className="min-w-0 truncate rounded-lg bg-sky-50 px-3 py-2 text-sm font-medium text-slate-600">
+              <span className="min-w-0 truncate rounded-lg border border-[color:var(--line)] bg-white/55 px-3 py-2 text-sm font-light text-[color:var(--muted)]">
                 {file.name}
               </span>
             )}
           </div>
 
           {error && (
-            <p className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+            <p className="mt-4 rounded-lg border border-[#f1c7b6] bg-[#fff7f2] px-4 py-3 text-sm font-normal text-[#a85030]">
               {error}
             </p>
           )}
         </div>
 
-        <div className="animate-fade-up delay-200 rounded-lg border border-sky-100 bg-white p-5 shadow-sm shadow-sky-100">
+        <div className="surface animate-gentle-in delay-200 rounded-lg p-5">
           {result ? (
             <ReportCard result={result} preview={preview} />
           ) : (
@@ -143,33 +143,34 @@ export default function Analyze() {
           )}
         </div>
       </section>
-
-      <p className="animate-fade-up text-sm leading-6 text-slate-500">
-        Not a medical diagnosis. Retra is for research and educational use
-        only.
-      </p>
     </main>
+  );
+}
+
+function StatusPill({ loading }: { loading: boolean }) {
+  return (
+    <span className="inline-flex w-fit items-center gap-2 rounded-lg border border-[color:var(--line)] bg-white/55 px-3 py-2 text-sm font-light text-[color:var(--muted)]">
+      <span
+        className={`size-2 rounded-full bg-[color:var(--powder-ink)] ${
+          loading ? "animate-quiet-pulse" : ""
+        }`}
+      />
+      {loading ? "running analysis" : "research demo"}
+    </span>
   );
 }
 
 function EmptyReport({ loading }: { loading: boolean }) {
   return (
-    <div className="grid min-h-[420px] place-items-center rounded-lg border border-dashed border-sky-200 bg-sky-50/70 p-8 text-center">
+    <div className="grid min-h-[420px] place-items-center rounded-lg border border-dashed border-[color:var(--line)] bg-white/35 p-8 text-center">
       <div className="max-w-sm">
-        <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-lg bg-white shadow-sm shadow-sky-100">
-          <span
-            className={`size-3 rounded-full bg-sky-400 ${
-              loading ? "animate-soft-pulse" : ""
-            }`}
-          />
-        </div>
-        <h2 className="text-xl font-bold text-slate-950">
+        <p className="text-xl font-light text-[color:var(--ink)]">
           {loading ? "Building report" : "Report will appear here"}
-        </h2>
-        <p className="mt-3 leading-7 text-slate-500">
+        </p>
+        <p className="mt-3 font-light leading-7 text-[color:var(--muted)]">
           {loading
             ? "The prediction request is running now."
-            : "Choose an image and run analysis to see the severity class, heatmap, and probability breakdown."}
+            : "Run analysis to see the severity class, heatmap, and probability breakdown."}
         </p>
       </div>
     </div>
@@ -186,51 +187,59 @@ function ReportCard({
   const confidence = (result.confidence * 100).toFixed(1);
 
   return (
-    <div>
+    <div className="animate-gentle-in">
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-bold text-sky-700">Retra analysis</p>
-          <h2 className="mt-1 text-3xl font-bold text-slate-950">
+          <p className="text-sm font-normal text-[color:var(--powder-ink)]">
+            Retra analysis
+          </p>
+          <h2 className="mt-1 text-3xl font-light text-[color:var(--ink)]">
             {result.prediction}
           </h2>
         </div>
-        <div className="rounded-lg bg-sky-50 px-4 py-3 text-right">
-          <p className="text-sm font-semibold text-slate-500">Confidence</p>
-          <p className="text-3xl font-bold text-sky-600">{confidence}%</p>
+        <div className="rounded-lg border border-[color:var(--line)] bg-white/45 px-4 py-3 text-right">
+          <p className="text-sm font-light text-[color:var(--muted)]">
+            Confidence
+          </p>
+          <p className="text-3xl font-light text-[color:var(--powder-ink)]">
+            {confidence}%
+          </p>
         </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         {preview && (
           <figure>
-            <figcaption className="mb-2 text-sm font-semibold text-slate-500">
+            <figcaption className="mb-2 text-sm font-light text-[color:var(--muted)]">
               Original
             </figcaption>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={preview}
               alt="Original retinal upload"
-              className="h-full w-full rounded-lg border border-sky-100 bg-sky-50 object-contain"
+              className="h-full w-full rounded-lg border border-[color:var(--line)] bg-white/45 object-contain"
             />
           </figure>
         )}
         <figure>
-          <figcaption className="mb-2 text-sm font-semibold text-slate-500">
+          <figcaption className="mb-2 text-sm font-light text-[color:var(--muted)]">
             Grad-CAM overlay
           </figcaption>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={`${API_URL}${result.heatmap_url}`}
             alt="Grad-CAM heatmap overlay"
-            className="h-full w-full rounded-lg border border-sky-100 bg-sky-50 object-contain"
+            className="h-full w-full rounded-lg border border-[color:var(--line)] bg-white/45 object-contain"
           />
         </figure>
       </div>
 
       <div className="mt-6">
         <div className="mb-3 flex items-center justify-between gap-3">
-          <h3 className="text-sm font-bold text-slate-700">Probabilities</h3>
-          <span className="text-sm font-semibold text-slate-400">
+          <h3 className="text-sm font-normal text-[color:var(--ink)]">
+            Probabilities
+          </h3>
+          <span className="text-sm font-light text-[color:var(--muted)]">
             class {result.class_id}
           </span>
         </div>
@@ -238,14 +247,16 @@ function ReportCard({
           {Object.entries(result.probabilities).map(([label, p]) => (
             <div key={label} className="grid gap-2 text-sm">
               <div className="flex items-center justify-between gap-3">
-                <span className="font-semibold text-slate-700">{label}</span>
-                <span className="font-semibold text-slate-500">
+                <span className="font-light text-[color:var(--ink)]">
+                  {label}
+                </span>
+                <span className="font-light text-[color:var(--muted)]">
                   {(p * 100).toFixed(1)}%
                 </span>
               </div>
-              <div className="h-2 overflow-hidden rounded-lg bg-sky-100">
+              <div className="h-1.5 overflow-hidden rounded-full bg-[color:var(--powder-100)]">
                 <div
-                  className="h-full rounded-lg bg-sky-500 animate-fill-bar"
+                  className="h-full rounded-full bg-[color:var(--powder-ink)] animate-fill-bar"
                   style={{ width: `${Math.round(p * 100)}%` }}
                 />
               </div>
@@ -254,7 +265,7 @@ function ReportCard({
         </div>
       </div>
 
-      <p className="mt-6 rounded-lg bg-sky-50 px-4 py-3 text-sm font-semibold leading-6 text-slate-600">
+      <p className="mt-6 rounded-lg border border-[color:var(--line)] bg-white/45 px-4 py-3 text-sm font-light leading-6 text-[color:var(--muted)]">
         Suggested action:{" "}
         {result.class_id >= 2
           ? "clinical review recommended."

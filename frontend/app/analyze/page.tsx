@@ -59,16 +59,16 @@ export default function Analyze() {
   return (
     <main className="space-y-8">
       <section className="animate-gentle-in flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div>
+        <div className="max-w-4xl">
           <p className="text-sm font-normal text-[color:var(--powder-ink)]">
             Try demo
           </p>
-          <h1 className="mt-3 max-w-3xl text-4xl font-light leading-tight text-[color:var(--ink)] sm:text-5xl">
-            Upload an image. Read the report.
+          <h1 className="text-balance-soft mt-3 max-w-3xl text-4xl font-light leading-tight text-[color:var(--ink)] sm:text-5xl">
+            Upload an image. Read one clear report.
           </h1>
-          <p className="mt-4 max-w-2xl text-lg font-light leading-8 text-[color:var(--muted)]">
-            Retra returns a class, confidence score, probability breakdown, and
-            attention overlay.
+          <p className="text-pretty-soft mt-4 max-w-4xl text-lg font-light leading-8 text-[color:var(--muted)]">
+            Severity, confidence, probabilities, and attention stay together in
+            one clean result.
           </p>
         </div>
         <StatusPill loading={loading} />
@@ -76,23 +76,33 @@ export default function Analyze() {
 
       <section className="grid gap-5 lg:grid-cols-[minmax(17rem,0.72fr)_minmax(0,1fr)]">
         <div className="surface animate-gentle-in delay-100 rounded-lg p-5">
-          <div className="mb-4">
-            <h2 className="text-lg font-normal text-[color:var(--ink)]">
-              Image
-            </h2>
-            <p className="mt-1 text-sm font-light leading-6 text-[color:var(--muted)]">
-              JPG, PNG, or another browser-supported image under 10 MB.
-            </p>
+          <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-normal text-[color:var(--ink)]">
+                Image
+              </h2>
+              <p className="text-pretty-soft mt-1 text-sm font-light leading-6 text-[color:var(--muted)]">
+                JPG, PNG, or another browser-supported image.
+              </p>
+            </div>
+            <span className="rounded-full border border-[color:var(--line)] bg-white/60 px-3 py-1 text-xs font-light text-[color:var(--muted)]">
+              max 10 MB
+            </span>
           </div>
 
-          <label className="group grid min-h-72 cursor-pointer place-items-center overflow-hidden rounded-lg border border-dashed border-[color:var(--line)] bg-white/45 p-4 text-center transition hover:border-[color:var(--powder-blue)] hover:bg-white/75">
+          <label className="group grid aspect-[4/3] min-h-60 cursor-pointer place-items-center overflow-hidden rounded-lg border border-dashed border-[color:var(--line)] bg-white/45 p-4 text-center transition hover:border-[color:var(--powder-blue)] hover:bg-white/75 sm:min-h-72">
             {preview ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={preview}
-                alt="Selected retinal preview"
-                className="max-h-72 w-full rounded-md object-contain"
-              />
+              <span className="relative grid h-full w-full place-items-center">
+                <span className="absolute left-3 top-3 rounded-md border border-[color:var(--line)] bg-white/75 px-3 py-1 text-xs font-light text-[color:var(--muted)]">
+                  selected image
+                </span>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={preview}
+                  alt="Selected retinal preview"
+                  className="max-h-full w-full rounded-md object-contain"
+                />
+              </span>
             ) : (
               <div className="max-w-xs">
                 <p className="text-base font-normal text-[color:var(--ink)]">
@@ -111,7 +121,7 @@ export default function Analyze() {
             />
           </label>
 
-          <div className="mt-5 flex flex-wrap items-center gap-3">
+          <div className="mt-5 flex min-w-0 flex-wrap items-center gap-3">
             <button
               type="button"
               onClick={onAnalyze}
@@ -122,7 +132,7 @@ export default function Analyze() {
               {loading ? "Analyzing..." : "Analyze image"}
             </button>
             {file && (
-              <span className="min-w-0 truncate rounded-lg border border-[color:var(--line)] bg-white/55 px-3 py-2 text-sm font-light text-[color:var(--muted)]">
+              <span className="min-w-0 max-w-full truncate rounded-lg border border-[color:var(--line)] bg-white/55 px-3 py-2 text-sm font-light text-[color:var(--muted)]">
                 {file.name}
               </span>
             )}
@@ -167,7 +177,7 @@ function EmptyReport({ loading }: { loading: boolean }) {
         <p className="text-xl font-light text-[color:var(--ink)]">
           {loading ? "Building report" : "Report will appear here"}
         </p>
-        <p className="mt-3 font-light leading-7 text-[color:var(--muted)]">
+        <p className="text-pretty-soft mt-3 font-light leading-7 text-[color:var(--muted)]">
           {loading
             ? "The prediction request is running now."
             : "Run analysis to see the severity class, heatmap, and probability breakdown."}
@@ -185,6 +195,8 @@ function ReportCard({
   preview: string | null;
 }) {
   const confidence = (result.confidence * 100).toFixed(1);
+  const imageGridClass = preview ? "grid gap-3 sm:grid-cols-2" : "grid gap-3";
+  const imageReviewLabel = preview ? "original + attention" : "attention overlay";
 
   return (
     <div className="animate-gentle-in">
@@ -207,31 +219,29 @@ function ReportCard({
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {preview && (
-          <figure>
-            <figcaption className="mb-2 text-sm font-light text-[color:var(--muted)]">
-              Original
-            </figcaption>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+      <div className="rounded-lg border border-[color:var(--line)] bg-white/45 p-3">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3 px-1">
+          <h3 className="text-sm font-normal text-[color:var(--ink)]">
+            Image review
+          </h3>
+          <span className="text-sm font-light text-[color:var(--muted)]">
+            {imageReviewLabel}
+          </span>
+        </div>
+        <div className={imageGridClass}>
+          {preview && (
+            <ImageFrame
               src={preview}
               alt="Original retinal upload"
-              className="h-full w-full rounded-lg border border-[color:var(--line)] bg-white/45 object-contain"
+              label="original"
             />
-          </figure>
-        )}
-        <figure>
-          <figcaption className="mb-2 text-sm font-light text-[color:var(--muted)]">
-            Grad-CAM overlay
-          </figcaption>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          )}
+          <ImageFrame
             src={`${API_URL}${result.heatmap_url}`}
             alt="Grad-CAM heatmap overlay"
-            className="h-full w-full rounded-lg border border-[color:var(--line)] bg-white/45 object-contain"
+            label="Grad-CAM overlay"
           />
-        </figure>
+        </div>
       </div>
 
       <div className="mt-6">
@@ -265,12 +275,36 @@ function ReportCard({
         </div>
       </div>
 
-      <p className="mt-6 rounded-lg border border-[color:var(--line)] bg-white/45 px-4 py-3 text-sm font-light leading-6 text-[color:var(--muted)]">
+      <p className="text-pretty-soft mt-6 rounded-lg border border-[color:var(--line)] bg-white/45 px-4 py-3 text-sm font-light leading-6 text-[color:var(--muted)]">
         Suggested action:{" "}
         {result.class_id >= 2
           ? "clinical review recommended."
           : "routine monitoring."}
       </p>
     </div>
+  );
+}
+
+function ImageFrame({
+  src,
+  alt,
+  label,
+}: {
+  src: string;
+  alt: string;
+  label: string;
+}) {
+  return (
+    <figure className="relative overflow-hidden rounded-lg border border-[color:var(--line)] bg-[color:var(--powder-50)]">
+      <figcaption className="absolute left-3 top-3 z-10 rounded-md border border-[color:var(--line)] bg-white/75 px-3 py-1 text-xs font-light text-[color:var(--muted)]">
+        {label}
+      </figcaption>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt={alt}
+        className="aspect-[4/3] h-full w-full object-contain p-2"
+      />
+    </figure>
   );
 }

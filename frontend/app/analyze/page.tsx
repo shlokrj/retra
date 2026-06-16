@@ -128,7 +128,7 @@ export default function Analyze() {
             {preview ? (
               <span className="relative grid h-full w-full place-items-center">
                 <span className="absolute left-3 top-3 rounded-md border border-[color:var(--line)] bg-white/75 px-3 py-1 text-xs font-light text-[color:var(--muted)]">
-                  change image
+                  click to change image
                 </span>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img

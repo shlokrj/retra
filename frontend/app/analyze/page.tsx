@@ -127,8 +127,8 @@ export default function Analyze() {
           <label className="group grid aspect-[4/3] min-h-60 cursor-pointer place-items-center overflow-hidden rounded-lg border border-dashed border-[color:var(--line)] bg-white/45 p-4 text-center transition hover:border-[color:var(--powder-blue)] hover:bg-white/75 sm:min-h-72">
             {preview ? (
               <span className="relative grid h-full w-full place-items-center">
-                <span className="absolute left-3 top-3 rounded-md border border-[color:var(--line)] bg-white/75 px-3 py-1 text-xs font-light text-[color:var(--muted)] transition group-hover:border-[color:var(--powder-blue)] group-hover:bg-white group-hover:text-[color:var(--powder-ink)]">
-                  click to change
+                <span className="absolute left-3 top-3 rounded-md border border-[color:var(--line)] bg-white/75 px-3 py-1 text-xs font-light text-[color:var(--muted)]">
+                  change image
                 </span>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img

@@ -32,9 +32,9 @@ export default function RootLayout({
             >
               <span
                 aria-hidden="true"
-                className="grid size-9 place-items-center rounded-lg bg-sky-100 text-sm text-sky-700 shadow-sm shadow-sky-100"
+                className="grid size-9 place-items-center rounded-lg bg-sky-100 text-lg text-sky-700 shadow-sm shadow-sky-100"
               >
-                R
+                👁️
               </span>
               <span>Retra</span>
             </Link>

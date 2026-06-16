@@ -32,6 +32,23 @@ looking.
 *Original | Grad-CAM heatmap | overlay — the model attending to lesions on a
 Proliferative DR case.*
 
+## Results
+
+EfficientNet-B0, 20 epochs, class-weighted loss, on the APTOS 2019 validation
+split (733 images, best epoch):
+
+| metric      | value |
+| ----------- | ----- |
+| accuracy    | 0.813 |
+| macro F1    | 0.673 |
+| weighted F1 | 0.814 |
+
+![Confusion matrix](docs/confusion_matrix.png)
+
+Per-class F1 runs from 0.97 (No DR) down to ~0.52 for the rarer Severe /
+Proliferative grades — the usual APTOS class imbalance. Reproduce with
+`python ml/evaluate.py`.
+
 ## Structure
 
 ```text

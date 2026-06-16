@@ -5,5 +5,5 @@ torch
 torchvision
 timm
 pillow
-opencv-python
+opencv-python-headless
 numpy

@@ -7,6 +7,7 @@ here mirrors ml/transforms.py; keep the two in sync.
 
 import io
 import os
+import urllib.request
 
 import cv2
 import numpy as np
@@ -62,6 +63,23 @@ def _resolve_checkpoint(path):
     return path
 
 
+def _ensure_checkpoint(path):
+    """resolve the weights locally, or download them from RETRA_MODEL_URL.
+
+    lets a container host fetch the git-ignored checkpoint at startup.
+    """
+    resolved = _resolve_checkpoint(path)
+    if os.path.exists(resolved):
+        return resolved
+    url = os.environ.get("RETRA_MODEL_URL")
+    if url:
+        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+        print(f"downloading model from {url} ...")
+        urllib.request.urlretrieve(url, path)
+        return path
+    return resolved
+
+
 class RetraModel:
     """efficientnet classifier with ben-graham preprocessing, TTA, and grad-cam.
 
@@ -70,7 +88,7 @@ class RetraModel:
 
     def __init__(self, checkpoint="models/retra.pth", device=None):
         self.device = device or _pick_device()
-        ckpt_path = _resolve_checkpoint(checkpoint)
+        ckpt_path = _ensure_checkpoint(checkpoint)
 
         if os.path.exists(ckpt_path):
             ckpt = torch.load(ckpt_path, map_location=self.device)

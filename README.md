@@ -34,25 +34,25 @@ Proliferative DR case.*
 
 ## Results
 
-EfficientNet-B3 @ 300px with Ben Graham preprocessing, class-weighted +
-label-smoothed loss, cosine LR, EMA weights, and test-time augmentation,
+EfficientNet-B3 @ 300px with Ben Graham preprocessing, a softened class-weighted
++ label-smoothed loss, cosine LR, EMA weights, and test-time augmentation,
 selected on **quadratic weighted kappa** (the standard DR grading metric) over
 the APTOS 2019 validation split (550 images):
 
 | metric                | B0 baseline | B3 (current) |
 | --------------------- | ----------- | ------------ |
-| quadratic kappa (QWK) | 0.78        | **0.868**    |
-| accuracy              | 0.813       | 0.775        |
-| macro F1              | 0.673       | 0.641        |
+| quadratic kappa (QWK) | 0.78        | **0.900**    |
+| accuracy              | 0.813       | **0.840**    |
+| macro F1              | 0.673       | **0.695**    |
 
 ![Confusion matrix](docs/confusion_matrix.png)
 
-QWK improves a lot because most remaining errors are *adjacent* grades (e.g.
-Moderate to Mild), which the ordinal metric barely penalises. Raw accuracy dips
-slightly because the class weighting over-corrects toward the rare grades, so the
-model over-predicts Mild and under-grades Moderate. Softening the class weights
-(see `weight_power` in [config.yaml](ml/config.yaml)) is the clear next lever.
-Reproduce with `python ml/evaluate.py`.
+The B3 model improves on every metric. Ben Graham preprocessing and the larger
+backbone drive the QWK gain, while softening the class weights (`weight_power:
+0.5` in [config.yaml](ml/config.yaml)) keeps accuracy high and Moderate recall
+strong instead of over-predicting Mild. No DR reaches 0.98 F1 and Moderate 0.80;
+the rare Severe grade (29 validation samples) stays the hardest. Reproduce with
+`python ml/evaluate.py`.
 
 ## Structure
 

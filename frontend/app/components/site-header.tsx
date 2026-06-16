@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { EyeMark } from "./eye-mark";
+import { BrandMark } from "./brand-mark";
 
 const navItems = [
   { href: "/analyze", label: "Try demo" },
@@ -18,15 +18,7 @@ export function SiteHeader() {
         aria-label="Primary"
         className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 sm:px-6"
       >
-        <div className="flex items-center gap-3">
-          <EyeMark />
-          <Link
-            href="/"
-            className="text-xl font-medium text-[color:var(--ink)] transition hover:text-[color:var(--powder-ink)]"
-          >
-            Retra
-          </Link>
-        </div>
+        <BrandMark />
 
         <div
           className="flex items-center rounded-lg border border-[color:var(--line)] bg-white/55 p-1 text-sm font-normal text-[color:var(--muted)]"

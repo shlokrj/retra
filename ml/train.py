@@ -40,11 +40,11 @@ def set_seed(seed):
     torch.cuda.manual_seed_all(seed)
 
 
-def class_weights(labels, num_classes, device):
-    """balanced inverse-frequency weights for the imbalanced classes."""
+def class_weights(labels, num_classes, device, power=1.0):
+    """inverse-frequency weights, raised to `power` (lower = softer)."""
     counts = np.bincount(labels, minlength=num_classes).astype(np.float32)
     counts[counts == 0] = 1.0
-    weights = len(labels) / (num_classes * counts)
+    weights = (len(labels) / (num_classes * counts)) ** power
     return torch.tensor(weights, dtype=torch.float32, device=device)
 
 
@@ -164,7 +164,8 @@ def main():
     ).to(device)
 
     weight = (
-        class_weights(train_labels, cfg["data"]["num_classes"], device)
+        class_weights(train_labels, cfg["data"]["num_classes"], device,
+                      power=tcfg.get("weight_power", 1.0))
         if tcfg["weighted_loss"] else None
     )
     criterion = nn.CrossEntropyLoss(weight=weight, label_smoothing=tcfg["label_smoothing"])

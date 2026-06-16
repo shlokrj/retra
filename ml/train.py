@@ -18,6 +18,7 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, Subset
 
 from dataset import APTOSDataset
+from device import pick_device
 from transforms import train_transforms, val_transforms
 
 
@@ -113,7 +114,7 @@ def main():
     args = parser.parse_args()
 
     cfg = load_config(args.config)
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = pick_device()
     set_seed(cfg["train"]["seed"])
     print(f"device: {device}")
 

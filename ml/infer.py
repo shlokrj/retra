@@ -15,6 +15,7 @@ import torch
 import torch.nn.functional as F
 from PIL import Image
 
+from device import pick_device
 from transforms import val_transforms
 
 CLASSES = {
@@ -51,7 +52,7 @@ def main():
     parser.add_argument("--checkpoint", default="models/retra_efficientnet_b0.pth")
     args = parser.parse_args()
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = pick_device()
     model = load_model(args.checkpoint, device=device)
     class_id, confidence, _ = predict(model, args.image, device=device)
 

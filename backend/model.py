@@ -23,6 +23,14 @@ _IMAGENET_MEAN = [0.485, 0.456, 0.406]
 _IMAGENET_STD = [0.229, 0.224, 0.225]
 
 
+def _pick_device():
+    if torch.cuda.is_available():
+        return "cuda"
+    if torch.backends.mps.is_available():
+        return "mps"
+    return "cpu"
+
+
 def _transform(image_size=224):
     return T.Compose([
         T.Resize((image_size, image_size)),
@@ -33,7 +41,7 @@ def _transform(image_size=224):
 
 class RetraModel:
     def __init__(self, checkpoint="models/retra_efficientnet_b0.pth", device=None):
-        self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = device or _pick_device()
         self.model = timm.create_model(
             "efficientnet_b0", pretrained=False, num_classes=5
         )

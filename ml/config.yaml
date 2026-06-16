@@ -1,0 +1,31 @@
+# retra training config
+
+data:
+  train_csv: data/train.csv
+  train_images: data/train_images
+  image_size: 224          # 224 or 384
+  num_classes: 5
+
+model:
+  name: efficientnet_b0
+  pretrained: true
+
+train:
+  epochs: 20
+  batch_size: 32
+  lr: 0.0003
+  weight_decay: 0.0001
+  val_split: 0.2
+  seed: 42
+  weighted_loss: true      # classes are imbalanced
+
+paths:
+  out_dir: models
+  checkpoint: models/retra_efficientnet_b0.pth
+
+classes:
+  0: No DR
+  1: Mild
+  2: Moderate
+  3: Severe
+  4: Proliferative DR

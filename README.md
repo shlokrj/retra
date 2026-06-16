@@ -10,7 +10,7 @@ looking.
 ## What it does
 
 1. Upload a retinal fundus image
-2. Classify DR severity (0–4) with EfficientNet-B0
+2. Classify DR severity (0-4) with EfficientNet-B3
 3. Show a confidence score + per-class probabilities
 4. Overlay a Grad-CAM heatmap (original | heatmap | overlay)
 5. Generate a clean report card
@@ -29,13 +29,13 @@ looking.
 
 ![Grad-CAM example](docs/example_heatmap.png)
 
-*Original | Grad-CAM heatmap | overlay — the model attending to lesions on a
+*Original | Grad-CAM heatmap | overlay, with the model attending to lesions on a
 Proliferative DR case.*
 
 ## Results
 
 EfficientNet-B3 @ 300px with Ben Graham preprocessing, class-weighted +
-label-smoothed loss, cosine LR, EMA weights, and test-time augmentation —
+label-smoothed loss, cosine LR, EMA weights, and test-time augmentation,
 selected on **quadratic weighted kappa** (the standard DR grading metric) over
 the APTOS 2019 validation split (550 images):
 
@@ -48,8 +48,8 @@ the APTOS 2019 validation split (550 images):
 ![Confusion matrix](docs/confusion_matrix.png)
 
 QWK improves a lot because most remaining errors are *adjacent* grades (e.g.
-Moderate→Mild), which the ordinal metric barely penalises. Raw accuracy dips
-slightly because the class weighting over-corrects toward the rare grades — the
+Moderate to Mild), which the ordinal metric barely penalises. Raw accuracy dips
+slightly because the class weighting over-corrects toward the rare grades, so the
 model over-predicts Mild and under-grades Moderate. Softening the class weights
 (see `weight_power` in [config.yaml](ml/config.yaml)) is the clear next lever.
 Reproduce with `python ml/evaluate.py`.
@@ -125,9 +125,13 @@ docker-compose up --build
 [Kaggle APTOS 2019 Blindness Detection](https://www.kaggle.com/c/aptos2019-blindness-detection).
 See [data/README.md](data/README.md) for the expected layout.
 
-## Stack
+## Tech stack
 
-- **Model:** EfficientNet-B0 (timm), PyTorch
-- **Explainability:** Grad-CAM
-- **Backend:** FastAPI
-- **Frontend:** Next.js + Tailwind
+| Layer          | Tools                                            |
+| -------------- | ------------------------------------------------ |
+| Model          | EfficientNet-B3 (timm), PyTorch                  |
+| Preprocessing  | OpenCV, Ben Graham fundus enhancement            |
+| Explainability | Grad-CAM                                         |
+| Backend        | FastAPI, Uvicorn                                 |
+| Frontend       | Next.js, Tailwind CSS                            |
+| Language       | Python 3, TypeScript                             |

@@ -19,9 +19,10 @@ const sections = [
     title: "Model architecture",
     body: (
       <>
-        EfficientNet-B0, ImageNet-pretrained and fine-tuned for 5-class
-        classification with a class-weighted loss to handle severity imbalance.
-        Explanations come from Grad-CAM over the final convolutional layer.
+        EfficientNet-B3 at 300px, ImageNet-pretrained and fine-tuned for 5-class
+        classification with Ben Graham fundus preprocessing, a softened
+        class-weighted loss, and EMA weights. Explanations come from Grad-CAM
+        over the final convolutional layer.
       </>
     ),
   },

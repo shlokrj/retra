@@ -9,6 +9,10 @@ export type PredictResult = {
   heatmap_url: string;
 };
 
+type ErrorResponse = {
+  detail?: unknown;
+};
+
 export async function predict(file: File): Promise<PredictResult> {
   const form = new FormData();
   form.append("file", file);
@@ -18,7 +22,20 @@ export async function predict(file: File): Promise<PredictResult> {
     body: form,
   });
   if (!res.ok) {
-    throw new Error(`prediction failed (${res.status})`);
+    throw new Error(await getErrorMessage(res));
   }
   return res.json();
+}
+
+async function getErrorMessage(res: Response) {
+  try {
+    const data = (await res.json()) as ErrorResponse;
+    if (typeof data.detail === "string") {
+      return data.detail;
+    }
+  } catch {
+    // fall through to the status-based message
+  }
+
+  return `prediction failed (${res.status})`;
 }

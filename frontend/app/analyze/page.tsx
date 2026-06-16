@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { API_URL, predict, type PredictResult } from "../../lib/api";
 
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+
 export default function Analyze() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -18,10 +20,27 @@ export default function Analyze() {
 
   function onSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0] ?? null;
-    setFile(f);
+    setFile(null);
     setResult(null);
     setError(null);
-    setPreview(f ? URL.createObjectURL(f) : null);
+    setPreview(null);
+
+    if (!f) return;
+
+    if (!f.type.startsWith("image/")) {
+      setError("Choose an image file.");
+      e.currentTarget.value = "";
+      return;
+    }
+
+    if (f.size > MAX_IMAGE_BYTES) {
+      setError("Keep images under 10 MB.");
+      e.currentTarget.value = "";
+      return;
+    }
+
+    setFile(f);
+    setPreview(URL.createObjectURL(f));
   }
 
   async function onAnalyze() {
@@ -80,7 +99,7 @@ export default function Analyze() {
                 </div>
                 <p className="font-bold text-slate-800">Choose image</p>
                 <p className="mt-2 text-sm leading-6 text-slate-500">
-                  JPG, PNG, or another browser-supported image format.
+                  JPG, PNG, or another browser-supported image under 10 MB.
                 </p>
               </div>
             )}
@@ -97,6 +116,7 @@ export default function Analyze() {
               type="button"
               onClick={onAnalyze}
               disabled={!file || loading}
+              aria-busy={loading}
               className="rounded-lg bg-sky-500 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-sky-200 transition hover:-translate-y-0.5 hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:translate-y-0"
             >
               {loading ? "Analyzing..." : "Analyze"}

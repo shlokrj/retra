@@ -94,6 +94,12 @@ pip install -r backend/requirements.txt
 cd backend && uvicorn main:app --reload
 ```
 
+The API serves `GET /health` and `POST /predict`. By default it looks for
+`models/retra.pth`; set `RETRA_CHECKPOINT=/path/to/checkpoint.pth` to point the
+backend at a different checkpoint. Uploaded images must be readable image files
+under 10 MB, and prediction requests are handled one at a time so Grad-CAM hook
+state cannot overlap across requests.
+
 `POST /predict` returns:
 
 ```json

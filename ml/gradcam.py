@@ -54,7 +54,7 @@ class GradCAM:
         cam -= cam.min()
         if cam.max() > 0:
             cam /= cam.max()
-        return cam.cpu().numpy(), class_idx, float(probs[class_idx])
+        return cam.cpu().numpy(), class_idx, float(probs[class_idx].detach())
 
 
 def overlay_heatmap(image_bgr, cam, alpha=0.4):

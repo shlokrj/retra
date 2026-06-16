@@ -22,7 +22,7 @@ train:
   val_split: 0.15
   seed: 42
   weighted_loss: true        # classes are imbalanced
-  weight_power: 1.0          # <1 softens class weights (0 = uniform, 1 = full inverse-freq)
+  weight_power: 0.5          # <1 softens class weights (0 = uniform, 1 = full inverse-freq)
   label_smoothing: 0.1
   ema_decay: 0.999           # exponential moving average of weights
   patience: 7                # early stop after N epochs without qwk gain

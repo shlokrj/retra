@@ -147,6 +147,8 @@ def main():
     parser.add_argument("--config", default="ml/config.yaml")
     parser.add_argument("--resume", default=None,
                         help="checkpoint to continue from (weights-only or a *_last full state)")
+    parser.add_argument("--init", default=None,
+                        help="load weights as initialization only (fresh schedule, no qwk floor)")
     args = parser.parse_args()
 
     cfg = load_config(args.config)
@@ -183,19 +185,22 @@ def main():
     os.makedirs(cfg["paths"]["out_dir"], exist_ok=True)
 
     start_epoch, best_qwk, exact = 1, -1.0, False
-    if args.resume and os.path.exists(args.resume):
-        ck = torch.load(args.resume, map_location=device)
+    load_path = args.resume or args.init
+    if load_path and os.path.exists(load_path):
+        ck = torch.load(load_path, map_location=device)
         model.load_state_dict(ck["state_dict"])
         ema = EMA(model, tcfg["ema_decay"])
         if "ema_shadow" in ck:
             ema.shadow = {k: v.to(device) for k, v in ck["ema_shadow"].items()}
-        if "optim_state" in ck:  # exact resume from a *_last full-state checkpoint
+        if args.resume and "optim_state" in ck:  # exact resume from a *_last full-state ckpt
             optimizer.load_state_dict(ck["optim_state"])
             scheduler.load_state_dict(ck["sched_state"])
             start_epoch = ck.get("epoch", 0) + 1
             best_qwk = ck.get("best_qwk", -1.0)
             exact = True
             print(f"resumed exactly from epoch {start_epoch - 1} (best qwk {best_qwk:.4f})")
+        elif args.init:
+            print(f"initialized weights from {args.init} (fresh schedule, no floor)")
     else:
         ema = EMA(model, tcfg["ema_decay"])
 

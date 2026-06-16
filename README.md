@@ -126,6 +126,20 @@ npm run dev
 docker-compose up --build
 ```
 
+## Deploy
+
+The frontend deploys on Vercel; the backend runs on a container host (Render,
+Railway, or Fly), because the torch image is far larger than Vercel's serverless
+limit.
+
+**Frontend (Vercel):** import the repo. `vercel.json` points the build at
+`frontend/`. Set `NEXT_PUBLIC_API_URL` to your backend's public URL.
+
+**Backend (Render):** the included `render.yaml` builds `backend/Dockerfile`
+(CPU-only torch). Set `RETRA_MODEL_URL` to a public URL for `retra.pth` (a
+GitHub release asset works); the backend downloads the weights on startup. The
+same Dockerfile runs on Railway or Fly.
+
 ## Dataset
 
 [Kaggle APTOS 2019 Blindness Detection](https://www.kaggle.com/c/aptos2019-blindness-detection).

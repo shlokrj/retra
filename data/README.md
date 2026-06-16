@@ -17,15 +17,16 @@ data/
 1. Accept the competition rules on the
    [APTOS data page](https://www.kaggle.com/competitions/aptos2019-blindness-detection/data)
    (required, one-time, while signed in to Kaggle).
-2. Fetch the dataset and link it into `data/`:
+2. Fetch the dataset with kagglehub (it downloads to a local cache and prints
+   the path):
 
    ```bash
    pip install kagglehub
-   python ml/download_data.py
+   python -c "import kagglehub; print(kagglehub.competition_download('aptos2019-blindness-detection'))"
    ```
 
-   This downloads via `kagglehub` (using your Kaggle credentials) and symlinks
-   `train_images/`, `train.csv`, etc. into `data/`.
+   Then copy or symlink `train.csv` and `train_images/` from that path into
+   `data/`.
 
 ## Labels
 

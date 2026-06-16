@@ -134,7 +134,7 @@ export default function Analyze() {
                 <img
                   src={preview}
                   alt="Selected retinal preview"
-                  className="max-h-full w-full rounded-md object-contain"
+                  className="h-full w-full rounded-md object-cover"
                 />
               </span>
             ) : (
@@ -372,7 +372,7 @@ function ImageFrame({
       <img
         src={src}
         alt={alt}
-        className="aspect-[4/3] h-full w-full object-contain p-2"
+        className="aspect-[4/3] h-full w-full rounded-md object-cover"
       />
     </figure>
   );

@@ -5,6 +5,8 @@ retinal fundus images. Upload a fundus image, get a DR severity classification
 with a confidence score, and see a Grad-CAM heatmap of where the model is
 looking.
 
+**Live demo:** [retra-analysis.vercel.app](https://retra-analysis.vercel.app)
+
 > Not a medical diagnosis. For research / educational use only.
 
 ## What it does
@@ -128,17 +130,19 @@ docker-compose up --build
 
 ## Deploy
 
-The frontend deploys on Vercel; the backend runs on a container host (Render,
-Railway, or Fly), because the torch image is far larger than Vercel's serverless
-limit.
+The frontend runs on Vercel and the backend on Hugging Face Spaces, because the
+torch image is far larger than Vercel's serverless limit.
 
 **Frontend (Vercel):** import the repo. `vercel.json` points the build at
-`frontend/`. Set `NEXT_PUBLIC_API_URL` to your backend's public URL.
+`frontend/`. Set `NEXT_PUBLIC_API_URL` to the backend's public URL, then
+redeploy (it is inlined at build time).
 
-**Backend (Render):** the included `render.yaml` builds `backend/Dockerfile`
-(CPU-only torch). Set `RETRA_MODEL_URL` to a public URL for `retra.pth` (a
-GitHub release asset works); the backend downloads the weights on startup. The
-same Dockerfile runs on Railway or Fly.
+**Backend (Hugging Face Spaces):** create a Docker Space and add the files from
+`backend/` (`backend/README.md` carries the Space metadata). Set a
+`RETRA_MODEL_URL` secret to a public URL for `retra.pth` (a GitHub release asset
+works); the backend downloads the weights on startup. The same
+`backend/Dockerfile` uses CPU-only torch and also runs on any container host
+such as Render, Railway, or Fly.
 
 ## Dataset
 

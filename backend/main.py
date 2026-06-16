@@ -1,14 +1,20 @@
 """retra fastapi backend.
 
 run:
-    uvicorn main:app --reload
+    cd backend && uvicorn main:app --reload
 """
+
+import os
+import uuid
 
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from model import RetraModel
+
+OUTPUTS_DIR = "outputs"
+os.makedirs(OUTPUTS_DIR, exist_ok=True)
 
 app = FastAPI(title="Retra API")
 
@@ -19,7 +25,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
+app.mount("/outputs", StaticFiles(directory=OUTPUTS_DIR), name="outputs")
 
 model = RetraModel()
 
@@ -32,8 +38,9 @@ async def health():
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
     image_bytes = await file.read()
-    result = model.predict(image_bytes)
 
-    # TODO: generate grad-cam heatmap, save under outputs/, set real heatmap_url
-    result["heatmap_url"] = "/outputs/example_heatmap.png"
+    name = f"{uuid.uuid4().hex}.png"
+    heatmap_path = os.path.join(OUTPUTS_DIR, name)
+    result = model.analyze(image_bytes, heatmap_path)
+    result["heatmap_url"] = f"/outputs/{name}"
     return result

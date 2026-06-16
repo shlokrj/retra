@@ -25,6 +25,13 @@ looking.
 4 = Proliferative DR
 ```
 
+## Demo
+
+![Grad-CAM example](docs/example_heatmap.png)
+
+*Original | Grad-CAM heatmap | overlay — the model attending to lesions on a
+Proliferative DR case.*
+
 ## Structure
 
 ```text

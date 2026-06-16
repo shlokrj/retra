@@ -18,7 +18,7 @@ from PIL import Image
 
 from device import pick_device
 from infer import CLASSES, load_model
-from transforms import val_transforms
+from transforms import preprocess_display, val_transforms
 
 
 class GradCAM:
@@ -71,14 +71,15 @@ def _label(panel, text, x):
                 (255, 255, 255), 1, cv2.LINE_AA)
 
 
-def run_gradcam(model, image_path, out_path, device, image_size=224, target_layer=None):
+def run_gradcam(model, image_path, out_path, device, image_size=300, target_layer=None):
     """run grad-cam on one image, write the original|heatmap|overlay panel."""
-    target_layer = target_layer or model.conv_head  # last conv in efficientnet-b0
+    target_layer = target_layer or model.conv_head  # last conv in efficientnet
     cam_engine = GradCAM(model, target_layer)
 
     pil = Image.open(image_path).convert("RGB")
     x = val_transforms(image_size)(pil).unsqueeze(0).to(device)
-    disp = cv2.cvtColor(np.array(pil.resize((image_size, image_size))), cv2.COLOR_RGB2BGR)
+    # overlay on the preprocessed image so the cam stays spatially aligned
+    disp = preprocess_display(pil, image_size)
 
     cam, class_idx, confidence = cam_engine.generate(x)
     heatmap, overlay = overlay_heatmap(disp, cam)
@@ -95,13 +96,15 @@ def run_gradcam(model, image_path, out_path, device, image_size=224, target_laye
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--image", required=True)
-    parser.add_argument("--checkpoint", default="models/retra_efficientnet_b0.pth")
+    parser.add_argument("--checkpoint", default="models/retra.pth")
     parser.add_argument("--out", default="backend/outputs/heatmap.png")
     args = parser.parse_args()
 
     device = pick_device()
-    model = load_model(args.checkpoint, device=device)
-    class_idx, confidence = run_gradcam(model, args.image, args.out, device)
+    model, image_size = load_model(args.checkpoint, device=device)
+    class_idx, confidence = run_gradcam(
+        model, args.image, args.out, device, image_size=image_size
+    )
 
     print(f"Prediction: {CLASSES[class_idx]}")
     print(f"Confidence: {confidence * 100:.1f}%")

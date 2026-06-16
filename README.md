@@ -5,7 +5,7 @@ retinal fundus images. Upload a fundus image, get a DR severity classification
 with a confidence score, and see a Grad-CAM heatmap of where the model is
 looking.
 
-> ⚠️ Not a medical diagnosis. For research / educational use only.
+> Not a medical diagnosis. For research / educational use only.
 
 ## What it does
 

@@ -1,0 +1,37 @@
+# data + model weights (large / private, download separately)
+data/*
+!data/.gitkeep
+!data/README.md
+models/*
+!models/.gitkeep
+
+# ml outputs / runs
+backend/outputs/*
+!backend/outputs/.gitkeep
+runs/
+wandb/
+*.pth
+*.pt
+*.ckpt
+*.log
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+.ipynb_checkpoints/
+
+# node / next
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# env + os
+.env
+.env*.local
+.DS_Store

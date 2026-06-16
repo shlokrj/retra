@@ -17,8 +17,13 @@ export default function Home() {
           <p className="text-sm font-normal text-[color:var(--powder-ink)]">
             Explainable retinal screening
           </p>
-          <h1 className="mt-4 max-w-3xl text-5xl font-light leading-[1.05] text-[color:var(--ink)] sm:text-6xl">
-            Retra reads fundus images and shows its reasoning.
+          <h1 className="mt-4 max-w-3xl text-[color:var(--ink)]">
+            <span className="block origin-left scale-x-[1.03] text-7xl font-light leading-none sm:scale-x-[1.08] sm:text-8xl">
+              Retra
+            </span>
+            <span className="mt-5 block max-w-2xl text-4xl font-light leading-tight sm:text-5xl">
+              reads fundus images and shows its reasoning.
+            </span>
           </h1>
           <p className="mt-5 max-w-2xl text-lg font-light leading-8 text-[color:var(--muted)]">
             Upload an image, get a diabetic retinopathy severity estimate, and

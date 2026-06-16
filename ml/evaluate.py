@@ -48,7 +48,7 @@ def save_confusion_matrix(cm, out_path):
     ax.set_yticks(range(5), CLASS_NAMES)
     ax.set_xlabel("predicted")
     ax.set_ylabel("true")
-    ax.set_title("Retra — confusion matrix (val)")
+    ax.set_title("Retra confusion matrix (val)")
     thresh = cm.max() / 2
     for i in range(5):
         for j in range(5):

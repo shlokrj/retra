@@ -2,7 +2,7 @@
 
 self-contained so the backend can build/run on its own (the Dockerfile only
 copies ./backend, so it must not import from ml/). the ben-graham preprocessing
-here mirrors ml/transforms.py — keep the two in sync.
+here mirrors ml/transforms.py; keep the two in sync.
 """
 
 import io
@@ -87,7 +87,7 @@ class RetraModel:
         else:
             name, self.image_size = "efficientnet_b3", 300
             self.model = timm.create_model(name, pretrained=False, num_classes=5)
-            print(f"warning: no checkpoint at {checkpoint} — using untrained weights")
+            print(f"warning: no checkpoint at {checkpoint}, using untrained weights")
 
         self.model.eval().to(self.device)
 

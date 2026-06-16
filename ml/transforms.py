@@ -2,7 +2,7 @@
 
 ben-graham style preprocessing: crop to the fundus circle, resize, then enhance
 local contrast (subtract a gaussian blur). this is the single biggest win on
-aptos-style retinopathy data — it makes microaneurysms / haemorrhages pop.
+aptos-style retinopathy data; it makes microaneurysms / haemorrhages pop.
 """
 
 import cv2
@@ -69,6 +69,6 @@ def val_transforms(image_size=300):
 
 
 def preprocess_display(pil_img, image_size):
-    """processed image as BGR uint8 — keeps grad-cam overlay aligned with input."""
+    """processed image as BGR uint8, keeps grad-cam overlay aligned with input."""
     arr = np.array(pil_img.convert("RGB"))
     return cv2.cvtColor(ben_graham(arr, image_size), cv2.COLOR_RGB2BGR)

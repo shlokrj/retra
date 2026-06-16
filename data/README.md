@@ -17,21 +17,15 @@ data/
 1. Accept the competition rules on the
    [APTOS data page](https://www.kaggle.com/competitions/aptos2019-blindness-detection/data)
    (required, one-time, while signed in to Kaggle).
-2. Create an API token: Kaggle → Account → "Create New API Token". Save the
-   downloaded `kaggle.json` to `~/.kaggle/kaggle.json` and lock it down:
+2. Fetch the dataset and link it into `data/`:
 
    ```bash
-   mkdir -p ~/.kaggle && mv ~/Downloads/kaggle.json ~/.kaggle/
-   chmod 600 ~/.kaggle/kaggle.json
-   ```
-3. Fetch + unzip everything into `data/`:
-
-   ```bash
-   pip install kaggle
+   pip install kagglehub
    python ml/download_data.py
    ```
 
-   (or manually: `kaggle competitions download -c aptos2019-blindness-detection -p data/` then unzip.)
+   This downloads via `kagglehub` (using your Kaggle credentials) and symlinks
+   `train_images/`, `train.csv`, etc. into `data/`.
 
 ## Labels
 

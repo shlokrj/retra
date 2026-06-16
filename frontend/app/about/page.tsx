@@ -1,39 +1,74 @@
-export default function About() {
-  return (
-    <main className="flex flex-col gap-8">
-      <h1 className="text-3xl font-bold tracking-tight">About Retra</h1>
-
-      <Section title="Dataset">
+const sections = [
+  {
+    title: "Dataset",
+    body: (
+      <>
         Trained on the{" "}
         <a
           href="https://www.kaggle.com/competitions/aptos2019-blindness-detection"
-          className="text-emerald-400 hover:underline"
+          className="font-semibold text-sky-700 hover:text-sky-900 hover:underline"
         >
           APTOS 2019 Blindness Detection
         </a>{" "}
-        dataset — 3,662 retinal fundus images labelled 0–4 by clinicians for DR
-        severity.
-      </Section>
-
-      <Section title="Model architecture">
-        EfficientNet-B0 (ImageNet-pretrained) fine-tuned for 5-class
-        classification, with a class-weighted loss to handle severity
-        imbalance. Explanations come from Grad-CAM over the final convolutional
-        layer.
-      </Section>
-
-      <Section title="Limitations">
-        Trained on a single public dataset; performance may not transfer across
-        cameras, populations, or image quality. It does not detect other ocular
-        disease, and confidence scores are not calibrated probabilities of
-        disease.
-      </Section>
-
-      <Section title="Ethical disclaimer">
+        dataset, with 3,662 retinal fundus images labelled 0-4 by clinicians
+        for DR severity.
+      </>
+    ),
+  },
+  {
+    title: "Model architecture",
+    body: (
+      <>
+        EfficientNet-B0, ImageNet-pretrained and fine-tuned for 5-class
+        classification with a class-weighted loss to handle severity imbalance.
+        Explanations come from Grad-CAM over the final convolutional layer.
+      </>
+    ),
+  },
+  {
+    title: "Limitations",
+    body: (
+      <>
+        Trained on a single public dataset, so performance may not transfer
+        across cameras, populations, or image quality. It does not detect other
+        ocular disease, and confidence scores are not calibrated probabilities
+        of disease.
+      </>
+    ),
+  },
+  {
+    title: "Ethical disclaimer",
+    body: (
+      <>
         Retra is a research and educational demo. It is not a medical device and
         must not be used for diagnosis or treatment decisions. Always consult a
         qualified clinician.
-      </Section>
+      </>
+    ),
+  },
+];
+
+export default function About() {
+  return (
+    <main className="space-y-8">
+      <section className="animate-fade-up max-w-3xl">
+        <p className="text-sm font-bold text-sky-700">About Retra</p>
+        <h1 className="mt-2 text-3xl font-bold leading-tight text-slate-950 sm:text-4xl">
+          A research demo for explainable diabetic retinopathy screening.
+        </h1>
+        <p className="mt-4 text-lg leading-8 text-slate-600">
+          The interface keeps the prediction, confidence, and heatmap close
+          together so the output can be reviewed as one report.
+        </p>
+      </section>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        {sections.map((section, i) => (
+          <Section key={section.title} title={section.title} delay={i}>
+            {section.body}
+          </Section>
+        ))}
+      </div>
     </main>
   );
 }
@@ -41,16 +76,20 @@ export default function About() {
 function Section({
   title,
   children,
+  delay,
 }: {
   title: string;
   children: React.ReactNode;
+  delay: number;
 }) {
+  const delayClass = delay % 2 === 0 ? "delay-100" : "delay-200";
+
   return (
-    <section>
-      <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-400">
-        {title}
-      </h2>
-      <p className="max-w-2xl leading-relaxed text-slate-300">{children}</p>
+    <section
+      className={`animate-fade-up ${delayClass} rounded-lg border border-sky-100 bg-white p-6 shadow-sm shadow-sky-100 transition hover:-translate-y-1 hover:border-sky-200`}
+    >
+      <h2 className="text-sm font-bold text-sky-700">{title}</h2>
+      <p className="mt-3 leading-7 text-slate-600">{children}</p>
     </section>
   );
 }

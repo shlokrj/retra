@@ -129,9 +129,24 @@ def evaluate(model, loader, device):
     return acc, f1, qwk
 
 
+def save_resume(path, model, ema, optimizer, scheduler, epoch, best_qwk, meta):
+    """full training state so a run can continue exactly where it stopped."""
+    torch.save({
+        **meta,
+        "state_dict": model.state_dict(),
+        "ema_shadow": ema.shadow,
+        "optim_state": optimizer.state_dict(),
+        "sched_state": scheduler.state_dict(),
+        "epoch": epoch,
+        "best_qwk": best_qwk,
+    }, path)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", default="ml/config.yaml")
+    parser.add_argument("--resume", default=None,
+                        help="checkpoint to continue from (weights-only or a *_last full state)")
     args = parser.parse_args()
 
     cfg = load_config(args.config)
@@ -147,8 +162,6 @@ def main():
         cfg["model"]["name"], pretrained=cfg["model"]["pretrained"],
         num_classes=cfg["data"]["num_classes"],
     ).to(device)
-    ema = EMA(model, tcfg["ema_decay"])
-    ema_model = copy.deepcopy(model)
 
     weight = (
         class_weights(train_labels, cfg["data"]["num_classes"], device)
@@ -158,11 +171,43 @@ def main():
     optimizer = torch.optim.AdamW(model.parameters(), lr=tcfg["lr"], weight_decay=tcfg["weight_decay"])
     scheduler = build_scheduler(optimizer, tcfg["epochs"], tcfg["warmup_epochs"])
 
+    meta = {
+        "model_name": cfg["model"]["name"],
+        "image_size": cfg["data"]["image_size"],
+        "num_classes": cfg["data"]["num_classes"],
+    }
     checkpoint = cfg["paths"]["checkpoint"]
+    base, ext = os.path.splitext(checkpoint)
+    resume_path = base + "_last" + ext
     os.makedirs(cfg["paths"]["out_dir"], exist_ok=True)
 
-    best_qwk, bad_epochs = -1.0, 0
-    for epoch in range(1, tcfg["epochs"] + 1):
+    start_epoch, best_qwk, exact = 1, -1.0, False
+    if args.resume and os.path.exists(args.resume):
+        ck = torch.load(args.resume, map_location=device)
+        model.load_state_dict(ck["state_dict"])
+        ema = EMA(model, tcfg["ema_decay"])
+        if "ema_shadow" in ck:
+            ema.shadow = {k: v.to(device) for k, v in ck["ema_shadow"].items()}
+        if "optim_state" in ck:  # exact resume from a *_last full-state checkpoint
+            optimizer.load_state_dict(ck["optim_state"])
+            scheduler.load_state_dict(ck["sched_state"])
+            start_epoch = ck.get("epoch", 0) + 1
+            best_qwk = ck.get("best_qwk", -1.0)
+            exact = True
+            print(f"resumed exactly from epoch {start_epoch - 1} (best qwk {best_qwk:.4f})")
+    else:
+        ema = EMA(model, tcfg["ema_decay"])
+
+    ema_model = copy.deepcopy(model)
+    ema.copy_to(ema_model)
+
+    if args.resume and os.path.exists(args.resume) and not exact:
+        # warm-start: floor best_qwk at the loaded model so we never regress the saved best
+        _, _, best_qwk = evaluate(ema_model, val_loader, device)
+        print(f"warm-start from weights; current val qwk {best_qwk:.4f}")
+
+    bad_epochs = 0
+    for epoch in range(start_epoch, tcfg["epochs"] + 1):
         loss = train_one_epoch(model, train_loader, criterion, optimizer, ema, device)
         ema.copy_to(ema_model)
         acc, f1, qwk = evaluate(ema_model, val_loader, device)
@@ -171,20 +216,19 @@ def main():
         print(f"epoch {epoch:2d}/{tcfg['epochs']}  loss {loss:.4f}  acc {acc:.4f}  "
               f"f1 {f1:.4f}  qwk {qwk:.4f}  lr {lr:.2e}")
 
-        if qwk > best_qwk:
+        improved = qwk > best_qwk
+        if improved:
             best_qwk, bad_epochs = qwk, 0
-            torch.save({
-                "model_name": cfg["model"]["name"],
-                "image_size": cfg["data"]["image_size"],
-                "num_classes": cfg["data"]["num_classes"],
-                "state_dict": ema_model.state_dict(),
-            }, checkpoint)
+            torch.save({**meta, "state_dict": ema_model.state_dict()}, checkpoint)
             print(f"  saved best -> {checkpoint} (qwk {qwk:.4f})")
         else:
             bad_epochs += 1
-            if bad_epochs >= tcfg["patience"]:
-                print(f"early stop: no qwk gain for {tcfg['patience']} epochs")
-                break
+
+        save_resume(resume_path, model, ema, optimizer, scheduler, epoch, best_qwk, meta)
+
+        if not improved and bad_epochs >= tcfg["patience"]:
+            print(f"early stop: no qwk gain for {tcfg['patience']} epochs")
+            break
 
     print(f"done. best val qwk: {best_qwk:.4f}")
 

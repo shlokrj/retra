@@ -5,7 +5,7 @@ retinal fundus images. Upload a fundus image, get a DR severity classification
 with a confidence score, and see a Grad-CAM heatmap of where the model is
 looking.
 
-**Live demo:** [retra-analysis.vercel.app](https://retra-analysis.vercel.app)
+**Live demo:** [retra-screening.vercel.app](https://retra-screening.vercel.app)
 
 > Not a medical diagnosis. For research / educational use only.
 

@@ -1,27 +1,34 @@
-# retra training config
+# retra training config — strong recipe
+#
+# levers if you have a beefier GPU: bump model.name to efficientnet_b4/b5 and
+# image_size to 380/456. on apple mps, b3 @ 300 is the sweet spot.
 
 data:
   train_csv: data/train.csv
   train_images: data/train_images
-  image_size: 224          # 224 or 384
+  image_size: 300
   num_classes: 5
 
 model:
-  name: efficientnet_b0
+  name: efficientnet_b3
   pretrained: true
 
 train:
-  epochs: 20
-  batch_size: 32
-  lr: 0.0003
+  epochs: 30
+  batch_size: 16
+  lr: 0.001
   weight_decay: 0.0001
-  val_split: 0.2
+  warmup_epochs: 2
+  val_split: 0.15
   seed: 42
-  weighted_loss: true      # classes are imbalanced
+  weighted_loss: true        # classes are imbalanced
+  label_smoothing: 0.1
+  ema_decay: 0.999           # exponential moving average of weights
+  patience: 7                # early stop after N epochs without qwk gain
 
 paths:
   out_dir: models
-  checkpoint: models/retra_efficientnet_b0.pth
+  checkpoint: models/retra.pth
 
 classes:
   0: No DR

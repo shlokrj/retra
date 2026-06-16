@@ -1,10 +1,15 @@
-"""train efficientnet-b0 on aptos for dr severity classification.
+"""train an efficientnet on aptos for dr severity classification.
+
+strong recipe: ben-graham preprocessing, class-weighted + label-smoothed loss,
+cosine lr with warmup, EMA weights, and model selection on quadratic weighted
+kappa (the actual DR metric) with early stopping.
 
 usage:
     python ml/train.py --config ml/config.yaml
 """
 
 import argparse
+import copy
 import os
 import random
 
@@ -13,8 +18,9 @@ import timm
 import torch
 import torch.nn as nn
 import yaml
-from sklearn.metrics import accuracy_score, f1_score
+from sklearn.metrics import accuracy_score, cohen_kappa_score, f1_score
 from sklearn.model_selection import train_test_split
+from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
 from torch.utils.data import DataLoader, Subset
 
 from dataset import APTOSDataset
@@ -34,25 +40,40 @@ def set_seed(seed):
     torch.cuda.manual_seed_all(seed)
 
 
-def build_model(name, num_classes, pretrained=True):
-    return timm.create_model(name, pretrained=pretrained, num_classes=num_classes)
-
-
 def class_weights(labels, num_classes, device):
     """balanced inverse-frequency weights for the imbalanced classes."""
     counts = np.bincount(labels, minlength=num_classes).astype(np.float32)
-    counts[counts == 0] = 1.0  # guard against missing classes
+    counts[counts == 0] = 1.0
     weights = len(labels) / (num_classes * counts)
     return torch.tensor(weights, dtype=torch.float32, device=device)
+
+
+class EMA:
+    """exponential moving average of model weights (version-independent)."""
+
+    def __init__(self, model, decay):
+        self.decay = decay
+        self.shadow = {k: v.detach().clone() for k, v in model.state_dict().items()}
+
+    @torch.no_grad()
+    def update(self, model):
+        for k, v in model.state_dict().items():
+            if v.dtype.is_floating_point:
+                self.shadow[k].mul_(self.decay).add_(v.detach(), alpha=1 - self.decay)
+            else:
+                self.shadow[k] = v.detach().clone()
+
+    def copy_to(self, model):
+        model.load_state_dict(self.shadow, strict=True)
 
 
 def make_loaders(cfg, seed):
     """stratified train/val split with separate transforms per split."""
     d = cfg["data"]
-    img_size = d["image_size"]
+    size = d["image_size"]
 
-    train_full = APTOSDataset(d["train_csv"], d["train_images"], train_transforms(img_size))
-    val_full = APTOSDataset(d["train_csv"], d["train_images"], val_transforms(img_size))
+    train_full = APTOSDataset(d["train_csv"], d["train_images"], train_transforms(size))
+    val_full = APTOSDataset(d["train_csv"], d["train_images"], val_transforms(size))
 
     labels = train_full.labels
     idx = list(range(len(labels)))
@@ -61,26 +82,25 @@ def make_loaders(cfg, seed):
     )
 
     pin = torch.cuda.is_available()
-    batch_size = cfg["train"]["batch_size"]
+    bs = cfg["train"]["batch_size"]
     train_loader = DataLoader(
-        Subset(train_full, train_idx),
-        batch_size=batch_size,
-        shuffle=True,
-        num_workers=2,
-        pin_memory=pin,
+        Subset(train_full, train_idx), batch_size=bs, shuffle=True,
+        num_workers=4, pin_memory=pin, drop_last=True,
     )
     val_loader = DataLoader(
-        Subset(val_full, val_idx),
-        batch_size=batch_size,
-        shuffle=False,
-        num_workers=2,
-        pin_memory=pin,
+        Subset(val_full, val_idx), batch_size=bs, shuffle=False,
+        num_workers=4, pin_memory=pin,
     )
-    train_labels = [labels[i] for i in train_idx]
-    return train_loader, val_loader, train_labels
+    return train_loader, val_loader, [labels[i] for i in train_idx]
 
 
-def train_one_epoch(model, loader, criterion, optimizer, device):
+def build_scheduler(optimizer, epochs, warmup_epochs):
+    warmup = LinearLR(optimizer, start_factor=0.1, total_iters=warmup_epochs)
+    cosine = CosineAnnealingLR(optimizer, T_max=max(1, epochs - warmup_epochs))
+    return SequentialLR(optimizer, [warmup, cosine], milestones=[warmup_epochs])
+
+
+def train_one_epoch(model, loader, criterion, optimizer, ema, device):
     model.train()
     running = 0.0
     for images, targets in loader:
@@ -89,23 +109,24 @@ def train_one_epoch(model, loader, criterion, optimizer, device):
         loss = criterion(model(images), targets)
         loss.backward()
         optimizer.step()
+        ema.update(model)
         running += loss.item() * images.size(0)
     return running / len(loader.dataset)
 
 
 @torch.no_grad()
 def evaluate(model, loader, device):
-    """return accuracy + macro f1 on the val set."""
+    """return accuracy, macro f1, and quadratic weighted kappa."""
     model.eval()
     preds, gts = [], []
     for images, targets in loader:
-        images = images.to(device)
-        logits = model(images)
+        logits = model(images.to(device))
         preds.extend(logits.argmax(dim=1).cpu().tolist())
         gts.extend(targets.tolist())
     acc = accuracy_score(gts, preds)
     f1 = f1_score(gts, preds, average="macro")
-    return acc, f1
+    qwk = cohen_kappa_score(gts, preds, weights="quadratic")
+    return acc, f1, qwk
 
 
 def main():
@@ -114,42 +135,58 @@ def main():
     args = parser.parse_args()
 
     cfg = load_config(args.config)
+    tcfg = cfg["train"]
     device = pick_device()
-    set_seed(cfg["train"]["seed"])
-    print(f"device: {device}")
+    set_seed(tcfg["seed"])
+    print(f"device: {device}  model: {cfg['model']['name']}  size: {cfg['data']['image_size']}")
 
-    train_loader, val_loader, train_labels = make_loaders(cfg, cfg["train"]["seed"])
+    train_loader, val_loader, train_labels = make_loaders(cfg, tcfg["seed"])
     print(f"train: {len(train_loader.dataset)}  val: {len(val_loader.dataset)}")
 
-    model = build_model(
-        cfg["model"]["name"], cfg["data"]["num_classes"], cfg["model"]["pretrained"]
+    model = timm.create_model(
+        cfg["model"]["name"], pretrained=cfg["model"]["pretrained"],
+        num_classes=cfg["data"]["num_classes"],
     ).to(device)
+    ema = EMA(model, tcfg["ema_decay"])
+    ema_model = copy.deepcopy(model)
 
     weight = (
         class_weights(train_labels, cfg["data"]["num_classes"], device)
-        if cfg["train"]["weighted_loss"]
-        else None
+        if tcfg["weighted_loss"] else None
     )
-    criterion = nn.CrossEntropyLoss(weight=weight)
-    optimizer = torch.optim.AdamW(
-        model.parameters(), lr=cfg["train"]["lr"], weight_decay=cfg["train"]["weight_decay"]
-    )
+    criterion = nn.CrossEntropyLoss(weight=weight, label_smoothing=tcfg["label_smoothing"])
+    optimizer = torch.optim.AdamW(model.parameters(), lr=tcfg["lr"], weight_decay=tcfg["weight_decay"])
+    scheduler = build_scheduler(optimizer, tcfg["epochs"], tcfg["warmup_epochs"])
 
     checkpoint = cfg["paths"]["checkpoint"]
     os.makedirs(cfg["paths"]["out_dir"], exist_ok=True)
 
-    best_f1 = 0.0
-    for epoch in range(1, cfg["train"]["epochs"] + 1):
-        loss = train_one_epoch(model, train_loader, criterion, optimizer, device)
-        acc, f1 = evaluate(model, val_loader, device)
-        print(f"epoch {epoch:2d}/{cfg['train']['epochs']}  loss {loss:.4f}  acc {acc:.4f}  f1 {f1:.4f}")
+    best_qwk, bad_epochs = -1.0, 0
+    for epoch in range(1, tcfg["epochs"] + 1):
+        loss = train_one_epoch(model, train_loader, criterion, optimizer, ema, device)
+        ema.copy_to(ema_model)
+        acc, f1, qwk = evaluate(ema_model, val_loader, device)
+        lr = optimizer.param_groups[0]["lr"]
+        scheduler.step()
+        print(f"epoch {epoch:2d}/{tcfg['epochs']}  loss {loss:.4f}  acc {acc:.4f}  "
+              f"f1 {f1:.4f}  qwk {qwk:.4f}  lr {lr:.2e}")
 
-        if f1 > best_f1:
-            best_f1 = f1
-            torch.save(model.state_dict(), checkpoint)
-            print(f"  saved best -> {checkpoint} (f1 {f1:.4f})")
+        if qwk > best_qwk:
+            best_qwk, bad_epochs = qwk, 0
+            torch.save({
+                "model_name": cfg["model"]["name"],
+                "image_size": cfg["data"]["image_size"],
+                "num_classes": cfg["data"]["num_classes"],
+                "state_dict": ema_model.state_dict(),
+            }, checkpoint)
+            print(f"  saved best -> {checkpoint} (qwk {qwk:.4f})")
+        else:
+            bad_epochs += 1
+            if bad_epochs >= tcfg["patience"]:
+                print(f"early stop: no qwk gain for {tcfg['patience']} epochs")
+                break
 
-    print(f"done. best val f1: {best_f1:.4f}")
+    print(f"done. best val qwk: {best_qwk:.4f}")
 
 
 if __name__ == "__main__":

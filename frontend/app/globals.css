@@ -126,6 +126,14 @@ body {
     background: rgba(255, 255, 255, 0.58);
   }
 
+  .text-balance-soft {
+    text-wrap: balance;
+  }
+
+  .text-pretty-soft {
+    text-wrap: pretty;
+  }
+
   .powder-button {
     border: 1px solid rgba(30, 85, 95, 0.14);
     background: var(--powder-blue);

@@ -58,16 +58,15 @@ const sections = [
 export default function About() {
   return (
     <main className="space-y-10">
-      <section className="animate-gentle-in max-w-3xl">
+      <section className="animate-gentle-in max-w-4xl">
         <p className="text-sm font-normal text-[color:var(--powder-ink)]">
           Model notes
         </p>
-        <h1 className="mt-3 text-4xl font-light leading-tight text-[color:var(--ink)] sm:text-5xl">
+        <h1 className="text-balance-soft mt-3 max-w-3xl text-4xl font-light leading-tight text-[color:var(--ink)] sm:text-5xl">
           A small research demo for explainable DR screening.
         </h1>
-        <p className="mt-4 text-lg font-light leading-8 text-[color:var(--muted)]">
-          The interface keeps the prediction, confidence, and heatmap together
-          so each result can be reviewed as one report.
+        <p className="text-pretty-soft mt-4 max-w-4xl text-lg font-light leading-8 text-[color:var(--muted)]">
+          The interface keeps the prediction, confidence, and heatmap together so each result can be reviewed as one report.
         </p>
       </section>
 
@@ -90,11 +89,11 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="grid gap-3 border-b border-[color:var(--line)] px-5 py-5 last:border-b-0 md:grid-cols-[0.28fr_1fr] md:px-6">
+    <section className="grid gap-3 border-b border-[color:var(--line)] px-5 py-5 last:border-b-0 md:grid-cols-[0.24fr_1fr] md:px-6">
       <h2 className="text-sm font-normal text-[color:var(--powder-ink)]">
         {title}
       </h2>
-      <p className="max-w-3xl text-base font-light leading-7 text-[color:var(--muted)]">
+      <p className="text-pretty-soft max-w-4xl text-base font-light leading-7 text-[color:var(--muted)]">
         {children}
       </p>
     </section>

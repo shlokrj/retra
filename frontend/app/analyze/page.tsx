@@ -5,6 +5,20 @@ import { API_URL, predict, type PredictResult } from "../../lib/api";
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 
+type Sample = { file: string; label: string; src: string };
+
+const SAMPLES: Sample[] = [
+  { file: "0_no_dr.png", label: "No DR", src: "/samples/0_no_dr.png" },
+  { file: "1_mild.png", label: "Mild", src: "/samples/1_mild.png" },
+  { file: "2_moderate.png", label: "Moderate", src: "/samples/2_moderate.png" },
+  { file: "3_severe.png", label: "Severe", src: "/samples/3_severe.png" },
+  {
+    file: "4_proliferative.png",
+    label: "Proliferative",
+    src: "/samples/4_proliferative.png",
+  },
+];
+
 export default function Analyze() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -43,16 +57,36 @@ export default function Analyze() {
     setPreview(URL.createObjectURL(f));
   }
 
-  async function onAnalyze() {
-    if (!file) return;
+  async function runPrediction(f: File) {
     setLoading(true);
     setError(null);
     try {
-      setResult(await predict(file));
+      setResult(await predict(f));
     } catch (err) {
       setError(err instanceof Error ? err.message : "something went wrong");
     } finally {
       setLoading(false);
+    }
+  }
+
+  function onAnalyze() {
+    if (file) runPrediction(file);
+  }
+
+  async function onSample(sample: Sample) {
+    if (loading) return;
+    setError(null);
+    setResult(null);
+    try {
+      const res = await fetch(sample.src);
+      if (!res.ok) throw new Error("could not load sample");
+      const blob = await res.blob();
+      const f = new File([blob], sample.file, { type: blob.type || "image/png" });
+      setFile(f);
+      setPreview(sample.src);
+      await runPrediction(f);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "could not load sample");
     }
   }
 
@@ -143,6 +177,41 @@ export default function Analyze() {
               {error}
             </p>
           )}
+
+          <div className="mt-6 border-t border-[color:var(--line)] pt-5">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <p className="text-sm font-normal text-[color:var(--powder-ink)]">
+                Or try a sample
+              </p>
+              <span className="text-xs font-light text-[color:var(--muted)]">
+                one per severity
+              </span>
+            </div>
+            <div className="grid grid-cols-5 gap-2">
+              {SAMPLES.map((sample, i) => (
+                <button
+                  key={sample.file}
+                  type="button"
+                  onClick={() => onSample(sample)}
+                  disabled={loading}
+                  title={`${sample.label} (class ${i})`}
+                  className="group surface-flat animate-gentle-in overflow-hidden rounded-lg p-1 text-center transition hover:-translate-y-0.5 hover:border-[color:var(--powder-blue)] hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+                  style={{ animationDelay: `${i * 70}ms` }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={sample.src}
+                    alt={sample.label}
+                    loading="lazy"
+                    className="aspect-square w-full rounded-md object-cover transition duration-300 group-hover:scale-105"
+                  />
+                  <span className="mt-1 block truncate text-[11px] font-light leading-tight text-[color:var(--muted)] transition group-hover:text-[color:var(--powder-ink)]">
+                    {sample.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         <div className="surface animate-gentle-in delay-200 rounded-lg p-5">

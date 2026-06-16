@@ -34,20 +34,25 @@ Proliferative DR case.*
 
 ## Results
 
-EfficientNet-B0, 20 epochs, class-weighted loss, on the APTOS 2019 validation
-split (733 images, best epoch):
+EfficientNet-B3 @ 300px with Ben Graham preprocessing, class-weighted +
+label-smoothed loss, cosine LR, EMA weights, and test-time augmentation —
+selected on **quadratic weighted kappa** (the standard DR grading metric) over
+the APTOS 2019 validation split (550 images):
 
-| metric      | value |
-| ----------- | ----- |
-| accuracy    | 0.813 |
-| macro F1    | 0.673 |
-| weighted F1 | 0.814 |
+| metric                | B0 baseline | B3 (current) |
+| --------------------- | ----------- | ------------ |
+| quadratic kappa (QWK) | 0.78        | **0.868**    |
+| accuracy              | 0.813       | 0.775        |
+| macro F1              | 0.673       | 0.641        |
 
 ![Confusion matrix](docs/confusion_matrix.png)
 
-Per-class F1 runs from 0.97 (No DR) down to ~0.52 for the rarer Severe /
-Proliferative grades — the usual APTOS class imbalance. Reproduce with
-`python ml/evaluate.py`.
+QWK improves a lot because most remaining errors are *adjacent* grades (e.g.
+Moderate→Mild), which the ordinal metric barely penalises. Raw accuracy dips
+slightly because the class weighting over-corrects toward the rare grades — the
+model over-predicts Mild and under-grades Moderate. Softening the class weights
+(see `weight_power` in [config.yaml](ml/config.yaml)) is the clear next lever.
+Reproduce with `python ml/evaluate.py`.
 
 ## Structure
 

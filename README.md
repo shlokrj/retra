@@ -133,17 +133,6 @@ docker-compose up --build
 The frontend runs on Vercel and the backend on Hugging Face Spaces, because the
 torch image is far larger than Vercel's serverless limit.
 
-**Frontend (Vercel):** import the repo. `vercel.json` points the build at
-`frontend/`. Set `NEXT_PUBLIC_API_URL` to the backend's public URL, then
-redeploy (it is inlined at build time).
-
-**Backend (Hugging Face Spaces):** create a Docker Space and add the files from
-`backend/` (`backend/README.md` carries the Space metadata). Set a
-`RETRA_MODEL_URL` secret to a public URL for `retra.pth` (a GitHub release asset
-works); the backend downloads the weights on startup. The same
-`backend/Dockerfile` uses CPU-only torch and also runs on any container host
-such as Render, Railway, or Fly.
-
 ## Dataset
 
 [Kaggle APTOS 2019 Blindness Detection](https://www.kaggle.com/c/aptos2019-blindness-detection).

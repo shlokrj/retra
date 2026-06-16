@@ -58,19 +58,20 @@ const sections = [
 export default function About() {
   return (
     <main className="space-y-10">
-      <section className="animate-gentle-in max-w-4xl">
+      <section className="animate-gentle-in max-w-6xl">
         <p className="text-sm font-normal text-[color:var(--powder-ink)]">
           Model notes
         </p>
         <h1 className="text-balance-soft mt-3 max-w-3xl text-4xl font-light leading-tight text-[color:var(--ink)] sm:text-5xl">
           A small research demo for explainable DR screening.
         </h1>
-        <p className="text-pretty-soft mt-4 max-w-4xl text-lg font-light leading-8 text-[color:var(--muted)]">
-          The interface keeps the prediction, confidence, and heatmap together so each result can be reviewed as one report.
+        <p className="text-pretty-soft mt-4 max-w-6xl text-lg font-light leading-8 text-[color:var(--muted)]">
+          The interface keeps prediction, confidence, and heatmap together so
+          each result reads as one report.
         </p>
       </section>
 
-      <div className="surface animate-gentle-in delay-100 overflow-hidden rounded-lg">
+      <div className="surface animate-gentle-in delay-100 overflow-hidden rounded-lg transition hover:border-[color:var(--powder-blue)] hover:bg-white/80">
         {sections.map((section) => (
           <Section key={section.title} title={section.title}>
             {section.body}
@@ -89,7 +90,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="grid gap-3 border-b border-[color:var(--line)] px-5 py-5 last:border-b-0 md:grid-cols-[0.24fr_1fr] md:px-6">
+    <section className="grid gap-3 border-b border-[color:var(--line)] px-5 py-5 transition last:border-b-0 hover:bg-[color:var(--powder-50)] md:grid-cols-[0.24fr_1fr] md:px-6">
       <h2 className="text-sm font-normal text-[color:var(--powder-ink)]">
         {title}
       </h2>

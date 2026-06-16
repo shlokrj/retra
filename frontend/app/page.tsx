@@ -63,7 +63,7 @@ export default function Home() {
           </div>
         </div>
 
-        <figure className="surface animate-gentle-in delay-100 rounded-lg p-3 sm:p-4">
+        <figure className="surface animate-gentle-in delay-100 rounded-lg p-3 transition hover:-translate-y-0.5 hover:border-[color:var(--powder-blue)] hover:bg-white/85 sm:p-4">
           <div className="mb-3 flex items-center justify-between gap-3 px-1">
             <figcaption className="text-sm font-normal text-[color:var(--powder-ink)]">
               sample report
@@ -133,9 +133,9 @@ export default function Home() {
         {workflow.map(({ number, title, copy }) => (
           <article
             key={number}
-            className="surface-flat rounded-lg p-5 transition hover:border-[color:var(--powder-blue)] hover:bg-white"
+            className="surface-flat rounded-lg p-5 transition hover:-translate-y-0.5 hover:border-[color:var(--powder-blue)] hover:bg-white"
           >
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
               <p className="text-sm font-normal text-[color:var(--powder-ink)]">
                 {number}
               </p>

@@ -19,6 +19,7 @@ import torch  # noqa: E402
 from sklearn.metrics import (  # noqa: E402
     accuracy_score,
     classification_report,
+    cohen_kappa_score,
     confusion_matrix,
     f1_score,
 )
@@ -74,12 +75,14 @@ def main():
     model = timm.create_model(
         cfg["model"]["name"], pretrained=False, num_classes=cfg["data"]["num_classes"]
     )
-    model.load_state_dict(torch.load(args.checkpoint, map_location=device))
+    ckpt = torch.load(args.checkpoint, map_location=device)
+    model.load_state_dict(ckpt["state_dict"] if "state_dict" in ckpt else ckpt)
     model.to(device)
 
     gts, preds = collect_preds(model, val_loader, device)
     print(f"accuracy: {accuracy_score(gts, preds):.4f}")
     print(f"macro f1: {f1_score(gts, preds, average='macro'):.4f}")
+    print(f"qwk:      {cohen_kappa_score(gts, preds, weights='quadratic'):.4f}")
     print(classification_report(gts, preds, target_names=CLASS_NAMES, digits=3))
 
     save_confusion_matrix(confusion_matrix(gts, preds), args.cm_out)

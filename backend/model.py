@@ -1,7 +1,8 @@
 """model loading + grad-cam inference for the retra api.
 
 self-contained so the backend can build/run on its own (the Dockerfile only
-copies ./backend, so it must not import from ml/).
+copies ./backend, so it must not import from ml/). the ben-graham preprocessing
+here mirrors ml/transforms.py — keep the two in sync.
 """
 
 import io
@@ -24,6 +25,7 @@ CLASSES = {
 
 _IMAGENET_MEAN = [0.485, 0.456, 0.406]
 _IMAGENET_STD = [0.229, 0.224, 0.225]
+_NORMALIZE = T.Compose([T.ToTensor(), T.Normalize(_IMAGENET_MEAN, _IMAGENET_STD)])
 
 
 def _pick_device():
@@ -34,12 +36,22 @@ def _pick_device():
     return "cpu"
 
 
-def _transform(image_size=224):
-    return T.Compose([
-        T.Resize((image_size, image_size)),
-        T.ToTensor(),
-        T.Normalize(_IMAGENET_MEAN, _IMAGENET_STD),
-    ])
+def _crop_to_circle(img):
+    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    coords = np.argwhere(gray > 7)
+    if coords.size == 0:
+        return img
+    y0, x0 = coords.min(axis=0)
+    y1, x1 = coords.max(axis=0) + 1
+    return img[y0:y1, x0:x1]
+
+
+def _ben_graham(pil_img, size, sigma_frac=30.0):
+    """crop + resize + local-contrast enhance; returns uint8 RGB size×size."""
+    img = _crop_to_circle(np.array(pil_img.convert("RGB")))
+    img = cv2.resize(img, (size, size))
+    blur = cv2.GaussianBlur(img, (0, 0), size / sigma_frac)
+    return cv2.addWeighted(img, 4, blur, -4, 128)
 
 
 def _resolve_checkpoint(path):
@@ -51,18 +63,30 @@ def _resolve_checkpoint(path):
 
 
 class RetraModel:
-    """efficientnet-b0 classifier with built-in grad-cam (not concurrency-safe)."""
+    """efficientnet classifier with ben-graham preprocessing, TTA, and grad-cam.
 
-    def __init__(self, checkpoint="models/retra_efficientnet_b0.pth", device=None, image_size=224):
+    not concurrency-safe (grad-cam hooks store per-call state).
+    """
+
+    def __init__(self, checkpoint="models/retra.pth", device=None):
         self.device = device or _pick_device()
-        self.image_size = image_size
-        self.model = timm.create_model("efficientnet_b0", pretrained=False, num_classes=5)
+        ckpt_path = _resolve_checkpoint(checkpoint)
 
-        ckpt = _resolve_checkpoint(checkpoint)
-        if os.path.exists(ckpt):
-            self.model.load_state_dict(torch.load(ckpt, map_location=self.device))
-            print(f"loaded checkpoint: {ckpt}")
+        if os.path.exists(ckpt_path):
+            ckpt = torch.load(ckpt_path, map_location=self.device)
+            if isinstance(ckpt, dict) and "state_dict" in ckpt:
+                name = ckpt.get("model_name", "efficientnet_b3")
+                self.image_size = ckpt.get("image_size", 300)
+                num_classes = ckpt.get("num_classes", 5)
+                state = ckpt["state_dict"]
+            else:  # legacy raw state_dict
+                name, self.image_size, num_classes, state = "efficientnet_b0", 224, 5, ckpt
+            self.model = timm.create_model(name, pretrained=False, num_classes=num_classes)
+            self.model.load_state_dict(state)
+            print(f"loaded checkpoint: {ckpt_path} ({name} @ {self.image_size})")
         else:
+            name, self.image_size = "efficientnet_b3", 300
+            self.model = timm.create_model(name, pretrained=False, num_classes=5)
             print(f"warning: no checkpoint at {checkpoint} — using untrained weights")
 
         self.model.eval().to(self.device)
@@ -87,23 +111,25 @@ class RetraModel:
             cam /= cam.max()
         return cam.cpu().numpy()
 
-    def analyze(self, image_bytes: bytes, heatmap_path: str) -> dict:
-        """classify + write a grad-cam overlay, return prediction details."""
+    def analyze(self, image_bytes: bytes, heatmap_path: str, tta: bool = True) -> dict:
+        """classify (with TTA) + write a grad-cam overlay, return details."""
         image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-        x = _transform(self.image_size)(image).unsqueeze(0).to(self.device)
+        proc_rgb = _ben_graham(image, self.image_size)
+        x = _NORMALIZE(Image.fromarray(proc_rgb)).unsqueeze(0).to(self.device)
 
-        logits = self.model(x)
-        probs = torch.softmax(logits, dim=1)[0]
+        # prediction with test-time augmentation (no grad)
+        with torch.no_grad():
+            views = [x, torch.flip(x, [3]), torch.flip(x, [2])] if tta else [x]
+            probs = torch.stack([torch.softmax(self.model(v), 1)[0] for v in views]).mean(0)
         class_id = int(probs.argmax())
 
+        # grad-cam for the predicted class (single view, needs grad)
+        logits = self.model(x)
         self.model.zero_grad()
         logits[0, class_id].backward()
         cam = self._cam()
 
-        # overlay the heatmap on the (resized) original and save it
-        disp = cv2.cvtColor(
-            np.array(image.resize((self.image_size, self.image_size))), cv2.COLOR_RGB2BGR
-        )
+        disp = cv2.cvtColor(proc_rgb, cv2.COLOR_RGB2BGR)
         cam_resized = cv2.resize(cam, (self.image_size, self.image_size))
         heat = cv2.applyColorMap(np.uint8(255 * cam_resized), cv2.COLORMAP_JET)
         overlay = cv2.addWeighted(heat, 0.4, disp, 0.6, 0)
@@ -114,6 +140,6 @@ class RetraModel:
         return {
             "class_id": class_id,
             "prediction": CLASSES[class_id],
-            "confidence": float(probs[class_id].detach()),
-            "probabilities": {CLASSES[i]: float(p.detach()) for i, p in enumerate(probs)},
+            "confidence": float(probs[class_id]),
+            "probabilities": {CLASSES[i]: float(p) for i, p in enumerate(probs)},
         }

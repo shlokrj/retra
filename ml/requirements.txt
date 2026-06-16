@@ -1,6 +1,7 @@
 torch
 torchvision
 timm
+numpy
 pandas
 opencv-python
 scikit-learn

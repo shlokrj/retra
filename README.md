@@ -27,6 +27,17 @@ looking.
 4 = Proliferative DR
 ```
 
+## Tech stack
+
+| Layer          | Tools                                 |
+| -------------- | ------------------------------------- |
+| Model          | EfficientNet-B3 (timm), PyTorch       |
+| Preprocessing  | OpenCV, Ben Graham fundus enhancement |
+| Explainability | Grad-CAM                              |
+| Backend        | FastAPI, Uvicorn                      |
+| Frontend       | Next.js, Tailwind CSS                 |
+| Language       | Python 3, TypeScript                  |
+
 ## Demo
 
 ![Grad-CAM example](docs/example_heatmap.png)
@@ -68,6 +79,7 @@ retra/
 ├── notebooks/         # experiments / EDA
 ├── docs/              # screenshots / writeup
 ├── docker-compose.yml
+├── vercel.json
 ├── README.md
 └── .gitignore
 ```
@@ -137,14 +149,3 @@ torch image is far larger than Vercel's serverless limit.
 
 [Kaggle APTOS 2019 Blindness Detection](https://www.kaggle.com/c/aptos2019-blindness-detection).
 See [data/README.md](data/README.md) for the expected layout.
-
-## Tech stack
-
-| Layer          | Tools                                            |
-| -------------- | ------------------------------------------------ |
-| Model          | EfficientNet-B3 (timm), PyTorch                  |
-| Preprocessing  | OpenCV, Ben Graham fundus enhancement            |
-| Explainability | Grad-CAM                                         |
-| Backend        | FastAPI, Uvicorn                                 |
-| Frontend       | Next.js, Tailwind CSS                            |
-| Language       | Python 3, TypeScript                             |
